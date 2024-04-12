@@ -155,7 +155,12 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
   }
 
   public String visit(AllocationExpression n, Vector<String> depth) {
-    return n.f1.accept(new ToStringVisitor());
+    final String obj_type = n.f1.accept(new ToStringVisitor());
+    if (symbol_table_.classes_.containsKey(obj_type)) {
+      return obj_type;
+    } else {
+      throw new TypecheckError();
+    }
   }
 
   public String visit(NotExpression n, Vector<String> depth) {

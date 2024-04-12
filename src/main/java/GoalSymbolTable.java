@@ -32,6 +32,10 @@ public class GoalSymbolTable {
   }
 
   public HashMap<String, String> fields(String class_name) {
+    if (!classes_.containsKey(class_name)) {
+      throw new TypecheckError();
+    }
+
     HashMap<String, String> res = new HashMap<>();
     res.putAll(classes_.get(class_name).declarations_);
 
@@ -44,6 +48,10 @@ public class GoalSymbolTable {
   }
 
   public HashMap<String, MethodSymbolTable> methods(String class_name) {
+    if (!classes_.containsKey(class_name)) {
+      throw new TypecheckError();
+    }
+
     HashMap<String, MethodSymbolTable> res = new HashMap<>();
     res.putAll(classes_.get(class_name).methods_);
 
