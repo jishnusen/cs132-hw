@@ -11,12 +11,11 @@ public class Typecheck {
     try {
       Node root = (new MiniJavaParser(System.in)).Goal();
 
-      HashMap<String, String> linkset = new HashMap<>();
-      root.accept(new LinksetBuilder(), linkset);
-
-      GoalSymbolTable symbol_table = new GoalSymbolTable(linkset);
+      // Phase 1
+      GoalSymbolTable symbol_table = new GoalSymbolTable();
       root.accept(new SymbolTableBuilder(symbol_table), new Vector<>());
 
+      // Phase 2
       TypecheckVisitor typechecker = new TypecheckVisitor(symbol_table);
       root.accept(typechecker, new Vector<>());
 

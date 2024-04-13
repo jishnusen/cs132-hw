@@ -1,13 +1,9 @@
 import java.util.*;
 
 public class GoalSymbolTable {
-  public HashMap<String, String> link_set_;
+  public HashMap<String, String> link_set_ = new HashMap<>();
   public HashMap<String, ClassSymbolTable> classes_ = new HashMap<>();
   public String main_class_ = null;
-
-  public GoalSymbolTable(HashMap<String, String> link_set) {
-    link_set_ = link_set;
-  }
 
   public void add_main(String main_name) {
     main_class_ = main_name;
@@ -27,11 +23,15 @@ public class GoalSymbolTable {
       return false;
     }
 
-    if (link_set_.get(t) == null) {
-      return t.equals(tp);
+    String cur = t;
+    while (!cur.equals(tp) && link_set_.containsKey(cur)) {
+      cur = link_set_.get(cur);
+      if (cur.equals(tp)) {
+        return true;
+      }
     }
 
-    return inherits(link_set_.get(t), tp);
+    return false;
   }
 
   public HashMap<String, String> fields(String class_name) {
@@ -42,9 +42,7 @@ public class GoalSymbolTable {
     HashMap<String, String> res = new HashMap<>();
     res.putAll(classes_.get(class_name).declarations_);
 
-    if (link_set_.get(class_name) == null) {
-      return res;
-    } else {
+    if (link_set_.containsKey(class_name)) {
       fields(link_set_.get(class_name)).forEach(res::putIfAbsent);
     }
     return res;
@@ -58,9 +56,7 @@ public class GoalSymbolTable {
     HashMap<String, MethodSymbolTable> res = new HashMap<>();
     res.putAll(classes_.get(class_name).methods_);
 
-    if (link_set_.get(class_name) == null) {
-      return res;
-    } else {
+    if (link_set_.containsKey(class_name)) {
       methods(link_set_.get(class_name)).forEach(res::putIfAbsent);
     }
     return res;

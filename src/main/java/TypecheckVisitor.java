@@ -13,24 +13,22 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
 
   public static boolean acyclic(HashMap<String, String> m) {
     for (String k : m.keySet()) {
-      if (!acyclic(k, m, new HashSet<>())) {
+      if (!acyclic(k, m)) {
         return false;
       }
     }
     return true;
   }
 
-  public static boolean acyclic(String k, HashMap<String, String> m, HashSet<String> seen) {
-    if (k == null) {
-      return true;
+  public static boolean acyclic(String k, HashMap<String, String> m) {
+    String cur = m.get(k);
+    while (!cur.equals(k) && m.containsKey(cur)) {
+      cur = m.get(cur);
+      if (cur.equals(k)) {
+        return false;
+      }
     }
-
-    if (seen.contains(k)) {
-      return false;
-    }
-
-    seen.add(k);
-    return acyclic(m.get(k), m, seen);
+    return true;
   }
 
 
