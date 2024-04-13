@@ -3,14 +3,17 @@ import java.util.*;
 public class GoalSymbolTable {
   public HashMap<String, String> link_set_;
   public HashMap<String, ClassSymbolTable> classes_ = new HashMap<>();
+  public String main_class_ = null;
 
   public GoalSymbolTable(HashMap<String, String> link_set) {
     link_set_ = link_set;
   }
 
   public void add_main(String main_name) {
+    main_class_ = main_name;
+
     ClassSymbolTable main_table = new ClassSymbolTable();
-    main_table.methods_.put("main{}", new MethodSymbolTable());
+    main_table.methods_.put("main", new MethodSymbolTable());
     classes_.put(main_name, main_table);
   }
 

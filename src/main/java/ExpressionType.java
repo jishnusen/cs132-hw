@@ -60,7 +60,7 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
   }
 
   public String visit(ArrayLookup n, Vector<String> depth) {
-    if (n.f0.accept(this, depth).equals("int[]") && n.f2.accept(this, depth).equals("int")) {
+    if (n.f0.accept(this, depth).endsWith("int[]") && n.f2.accept(this, depth).equals("int")) {
       return "int";
     } else {
       throw new TypecheckError();
@@ -68,7 +68,7 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
   }
 
   public String visit(ArrayLength n, Vector<String> depth) {
-    if (n.f0.accept(this, depth).equals("int[]")) {
+    if (n.f0.accept(this, depth).endsWith("[]")) {
       return "int";
     } else {
       throw new TypecheckError();
@@ -139,7 +139,7 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
   }
 
   public String visit(ThisExpression n, Vector<String> depth) {
-    if (depth.size() > 0) {
+    if (depth.size() > 0 && !depth.get(0).equals(symbol_table_.main_class_)) {
       return depth.get(0);
     } else {
       throw new TypecheckError();

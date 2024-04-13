@@ -57,19 +57,34 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
   }
 
   public void visit(MainClass n, Vector<String> depth) {
+    final String main_class = n.accept(new ToStringVisitor());
+    final MethodSymbolTable main_method = symbol_table_
+      .classes_.get(main_class)
+      .methods_.get("main");
+
     // distinct (id_1, ..., id_r)
     n.f14.accept(new DistinctVisitor());
+    // check types of ids are valid
+    n.f14.accept(this, depth);
+
+    for (final String id : main_method.declarations_.keySet()) {
+      if (main_method.arguments_.containsKey(id)) {
+        throw new TypecheckError();
+      }
+    }
 
     // |- s_i
     Vector<String> s_depth = new Vector<>(depth);
-    s_depth.add(n.accept(new ToStringVisitor()));
-    s_depth.add("main{}");
+    s_depth.add(main_class);
+    s_depth.add("main");
     n.f15.accept(this, s_depth);
   }
 
   public void visit(ClassDeclaration n, Vector<String> depth) {
     // distinct(id_1, ..., id_f)
     n.f3.accept(new DistinctVisitor());
+    // check types of ids
+    n.f3.accept(this, depth);
 
     // distinct(methodname(m_1), ..., methodname(m_k))
     n.f4.accept(new DistinctVisitor());
@@ -83,6 +98,8 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
   public void visit(ClassExtendsDeclaration n, Vector<String> depth) {
     // distinct(id_1, ..., id_f)
     n.f5.accept(new DistinctVisitor());
+    // check types of ids
+    n.f5.accept(this, depth);
 
     // distinct(methodname(m_1), ..., methodname(m_k))
     n.f6.accept(new DistinctVisitor());
@@ -111,9 +128,11 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
   public void visit(MethodDeclaration n, Vector<String> depth) {
     // distinct(args)
     n.f4.accept(new DistinctVisitor());
+    n.f4.accept(this, depth);
 
     // distinct(decls)
     n.f7.accept(new DistinctVisitor());
+    n.f7.accept(this, depth);
 
     // distinct(args, decls)
     final String method_name = n.accept(new ToStringVisitor());
@@ -131,8 +150,21 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
     n.f8.accept(this, n_depth);
 
     // A, C |- e : t
-    if (!m_symbols.return_type_
-        .equals(n.f10.accept(new ExpressionType(symbol_table_), n_depth))) {
+    if (!symbol_table_.inherits(n.f10.accept(new ExpressionType(symbol_table_), n_depth),
+                                m_symbols.return_type_)) {
+      throw new TypecheckError();
+    }
+  }
+
+  public void visit(Type n, Vector<String> depth) {
+    HashSet<String> primitive = new HashSet<>();
+    primitive.add("int");
+    primitive.add("int[]");
+    primitive.add("boolean");
+
+    final String t = n.accept(new ToStringVisitor());
+
+    if (!primitive.contains(t) && !symbol_table_.classes_.containsKey(t)) {
       throw new TypecheckError();
     }
   }
