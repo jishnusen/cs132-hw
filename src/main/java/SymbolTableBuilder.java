@@ -18,12 +18,9 @@ public class SymbolTableBuilder extends GJVoidDepthFirst<Vector<String>> {
     table_.add_main(main_class);
     MethodSymbolTable main_method = table_.classes_.get(main_class)
       .methods_.get("main{}");
-    main_method.return_type_ = "void";
-    main_method.arguments_
-      .put(n.f11.accept(new ToStringVisitor()), "String[]");
-    main_method.arg_order_.addAll(main_method.arguments_.keySet());
 
     Vector<String> n_depth = new Vector<>(depth);
+    n_depth.add(main_class);
     n_depth.add("main{}");
     n.f14.accept(this, n_depth);
   }

@@ -29,8 +29,7 @@ public class MethodSymbolTable {
   }
 
   public boolean equals(MethodSymbolTable b) {
-    return (return_type_ == b.return_type_ &&
-            arguments_.equals(b.arguments_) &&
-            declarations_.equals(b.declarations_));
+    return (return_type_.equals(b.return_type_) &&
+            arguments_.equals(b.arguments_));
   }
 }
