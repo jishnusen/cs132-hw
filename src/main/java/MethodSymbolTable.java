@@ -29,7 +29,18 @@ public class MethodSymbolTable {
   }
 
   public boolean equals(MethodSymbolTable b) {
-    return (return_type_.equals(b.return_type_) &&
-            arguments_.equals(b.arguments_));
+    if (arg_order_.size() != b.arg_order_.size()) {
+      return false;
+    }
+
+    for (int i = 0; i < arg_order_.size(); i++) {
+      final String a_arg_type = arguments_.get(arg_order_.get(i));
+      final String b_arg_type = b.arguments_.get(b.arg_order_.get(i));
+      if (!a_arg_type.equals(b_arg_type)) {
+        return false;
+      }
+    }
+
+    return return_type_.equals(b.return_type_);
   }
 }

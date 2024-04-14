@@ -20,9 +20,7 @@ public class Typecheck {
       root.accept(typechecker, new Vector<>());
 
       System.out.println("Program type checked successfully");
-    } catch (ParseException e) {
-      System.out.println(e.toString());
-    } catch (TypecheckError e) {
+    } catch (Exception e) {
       e.printStackTrace();
       System.out.println("Type error");
     }
