@@ -186,10 +186,12 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
   }
 
   public void visit(ArrayAssignmentStatement n, Vector<String> depth) {
+    String lhs_type = n.f0.accept(new ExpressionType(symbol_table_), depth);
     String idx_type = n.f2.accept(new ExpressionType(symbol_table_), depth);
     String rhs_type = n.f5.accept(new ExpressionType(symbol_table_), depth);
 
-    if (!idx_type.equals("int") || !rhs_type.equals("int")) {
+    if (!lhs_type.equals("int[]") ||
+        !idx_type.equals("int") || !rhs_type.equals("int")) {
       throw new TypecheckError();
     }
   }
