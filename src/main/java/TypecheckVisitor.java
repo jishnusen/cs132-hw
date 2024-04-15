@@ -97,7 +97,7 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
     String id = n.f1.f0.toString();
     String id_P = n.f3.f0.toString();
 
-    if (id_P.equals(symbol_table_.main_class_) || !symbol_table_.classes_.containsKey(id_P)) {
+    if (!symbol_table_.classes_.containsKey(id_P)) {
       throw new TypecheckError();
     }
 
@@ -153,7 +153,7 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
     n.f8.accept(this, n_depth);
 
     // A, C |- e : t
-    if (!symbol_table_.inherits(n.f10.accept(new ExpressionType(symbol_table_), n_depth),
+    if (!symbol_table_.child_of(n.f10.accept(new ExpressionType(symbol_table_), n_depth),
                                 m_symbols.return_type_)) {
       throw new TypecheckError();
     }
@@ -170,10 +170,6 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
     if (!primitive.contains(t) && !symbol_table_.classes_.containsKey(t)) {
       throw new TypecheckError();
     }
-
-    if (t.equals(symbol_table_.main_class_)) {
-      throw new TypecheckError();
-    }
   }
 
   public void visit(Statement n, Vector<String> depth) {
@@ -184,7 +180,7 @@ public class TypecheckVisitor extends GJVoidDepthFirst<Vector<String>> {
     String lhs_type = symbol_table_.lookup(n.f0.accept(new ToStringVisitor()), depth);
     String rhs_type = n.f2.accept(new ExpressionType(symbol_table_), depth);
 
-    if (!symbol_table_.inherits(rhs_type, lhs_type)) {
+    if (!symbol_table_.child_of(rhs_type, lhs_type)) {
       throw new TypecheckError();
     }
   }

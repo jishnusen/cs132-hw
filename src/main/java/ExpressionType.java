@@ -15,12 +15,9 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
     return n.f0.choice.accept(this, depth);
   }
 
-  public String visit(PrimaryExpression n, Vector<String> depth) {
-    return n.f0.choice.accept(this, depth);
-  }
-
   public String visit(AndExpression n, Vector<String> depth) {
-    if (n.f0.accept(this, depth).equals("boolean") && n.f2.accept(this, depth).equals("boolean")) {
+    if (n.f0.accept(this, depth).equals("boolean") &&
+        n.f2.accept(this, depth).equals("boolean")) {
       return "boolean";
     } else {
       throw new TypecheckError();
@@ -97,7 +94,7 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
     }
     for (int i = 0; i < arg_types.length; i++) {
       final String true_type = call.arguments_.get(call.arg_order_.get(i));
-      if (!symbol_table_.inherits(arg_types[i], true_type)) {
+      if (!symbol_table_.child_of(arg_types[i], true_type)) {
         throw new TypecheckError();
       }
     }
@@ -105,39 +102,47 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
   }
 
   public String visit(ExpressionList n, Vector<String> depth) {
-    return n.f0.accept(this, depth) + ";" + n.f1.accept(this, depth);
+    return n.f0.accept(this, depth) + n.f1.accept(this, depth);
   }
 
   public String visit(ExpressionRest n, Vector<String> depth) {
-    return n.f1.accept(this, depth);
+    return ";" + n.f1.accept(this, depth);
   }
 
   public String visit(NodeListOptional n, Vector<String> depth) {
     String res = "";
     for (Node e : n.nodes) {
       res += e.accept(this, depth);
-      res += ";";
     }
-    if (res.length() > 0) res = res.substring(0, res.length() - 1);
     return res;
   }
 
+  /* Primary Expression */
+  public String visit(PrimaryExpression n, Vector<String> depth) {
+    return n.f0.choice.accept(this, depth);
+  }
+
+  // c
   public String visit(IntegerLiteral n, Vector<String> depth) {
     return "int";
   }
 
+  // true
   public String visit(TrueLiteral n, Vector<String> depth) {
     return "boolean";
   }
 
+  // false
   public String visit(FalseLiteral n, Vector<String> depth) {
     return "boolean";
   }
 
+  // id
   public String visit(Identifier n, Vector<String> depth) {
     return symbol_table_.lookup(n.accept(new ToStringVisitor()), depth);
   }
 
+  // this
   public String visit(ThisExpression n, Vector<String> depth) {
     if (depth.size() > 0 && !depth.get(0).equals(symbol_table_.main_class_)) {
       return depth.get(0);
@@ -146,6 +151,7 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
     }
   }
 
+  // new int[e]
   public String visit(ArrayAllocationExpression n, Vector<String> depth) {
     if (n.f3.accept(this, depth).equals("int")) {
       return "int[]";
@@ -154,6 +160,7 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
     }
   }
 
+  // new id()
   public String visit(AllocationExpression n, Vector<String> depth) {
     final String obj_type = n.f1.accept(new ToStringVisitor());
     if (symbol_table_.classes_.containsKey(obj_type)) {
@@ -163,6 +170,7 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
     }
   }
 
+  // !e
   public String visit(NotExpression n, Vector<String> depth) {
     if (n.f1.accept(this, depth).equals("boolean")) {
       return "boolean";
@@ -171,6 +179,7 @@ public class ExpressionType extends GJDepthFirst<String, Vector<String>> {
     }
   }
 
+  // (e)
   public String visit(BracketExpression n, Vector<String> depth) {
     return n.f1.accept(this, depth);
   }

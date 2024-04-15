@@ -14,7 +14,7 @@ public class GoalSymbolTable {
   }
 
   // t <= tp
-  public boolean inherits(String t, String tp) {
+  public boolean child_of(String t, String tp) {
     if (t.equals(tp)) {
       return true;
     }
