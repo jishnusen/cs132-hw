@@ -48,6 +48,11 @@ public class SymbolTableBuilder extends GJVoidDepthFirst<Vector<String>> {
   public void visit(ClassExtendsDeclaration n, Vector<String> depth) {
     final String class_name = n.accept(new ToStringVisitor());
     final String parent_name = n.f3.accept(new ToStringVisitor());
+
+    if (class_name.equals(parent_name)) { // will cause recursion error
+      throw new TypecheckError();
+    }
+
     table_.link_set_.put(class_name, parent_name);
     table_.classes_.put(class_name, new ClassSymbolTable());
 

@@ -29,6 +29,10 @@ public class MethodSymbolTable {
   }
 
   public boolean equals(MethodSymbolTable b) {
+    if (!return_type_.equals(b.return_type_)) {
+      return false;
+    }
+
     if (arg_order_.size() != b.arg_order_.size()) {
       return false;
     }
@@ -41,6 +45,6 @@ public class MethodSymbolTable {
       }
     }
 
-    return return_type_.equals(b.return_type_);
+    return true;
   }
 }
