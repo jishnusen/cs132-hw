@@ -1,8 +1,8 @@
 import java.util.*;
 
 public class ClassSymbolTable {
-  public HashMap<String, String> declarations_ = new HashMap<>();
-  public HashMap<String, MethodSymbolTable> methods_ = new HashMap<>();
+  public IndexedMap<String, String> declarations_ = new IndexedMap<>();
+  public IndexedMap<String, MethodSymbolTable> methods_ = new IndexedMap<>();
 
   public void put_decl(String k, String v, Vector<String> depth) {
     if (depth.size() > 1) {

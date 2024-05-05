@@ -34,45 +34,52 @@ public class GoalSymbolTable {
     return false;
   }
 
-  public HashMap<String, String> fields(String class_name) {
+  public IndexedMap<String, String> fields(String class_name) {
     if (!classes_.containsKey(class_name)) {
       throw new TypecheckError();
     }
 
-    HashMap<String, String> res = new HashMap<>();
-    res.putAll(classes_.get(class_name).declarations_);
+    IndexedMap<String, String> res = new IndexedMap<>();
+    Stack<IndexedMap<String, String>> inherit = new Stack<>();
+    inherit.add(classes_.get(class_name).declarations_);
 
-    if (link_set_.containsKey(class_name)) {
-      fields(link_set_.get(class_name)).forEach(res::putIfAbsent);
+    String cur = class_name;
+    while (link_set_.containsKey(cur)) {
+      cur = link_set_.get(cur);
+      inherit.add(classes_.get(cur).declarations_);
+    }
+
+    while (!inherit.empty()) {
+      IndexedMap<String, String> fields = inherit.pop();
+      for (String k : fields.insertionOrder) {
+        res.put(k, fields.get(k));
+      }
     }
     return res;
   }
 
-  public HashMap<String, MethodSymbolTable> methods(String class_name) {
+  public IndexedMap<String, MethodSymbolTable> methods(String class_name) {
     if (!classes_.containsKey(class_name)) {
       throw new TypecheckError();
     }
 
-    HashMap<String, MethodSymbolTable> res = new HashMap<>();
-    res.putAll(classes_.get(class_name).methods_);
+    IndexedMap<String, MethodSymbolTable> res = new IndexedMap<>();
+    Stack<IndexedMap<String, MethodSymbolTable>> inherit = new Stack<>();
+    inherit.add(classes_.get(class_name).methods_);
 
-    if (link_set_.containsKey(class_name)) {
-      methods(link_set_.get(class_name)).forEach(res::putIfAbsent);
+    String cur = class_name;
+    while (link_set_.containsKey(cur)) {
+      cur = link_set_.get(cur);
+      inherit.add(classes_.get(cur).methods_);
+    }
+
+    while (!inherit.empty()) {
+      IndexedMap<String, MethodSymbolTable> fields = inherit.pop();
+      for (String k : fields.insertionOrder) {
+        res.put(k, fields.get(k));
+      }
     }
     return res;
-  }
-
-  public String lookup(String k, Vector<String> depth) {
-    HashMap<String, String> avail_vars = fields(depth.get(0));
-    MethodSymbolTable method = methods(depth.get(0)).get(depth.get(1));
-    avail_vars.putAll(method.arguments_);
-    avail_vars.putAll(method.declarations_);
-
-    if (avail_vars.containsKey(k)) {
-      return avail_vars.get(k);
-    } else {
-      throw new TypecheckError();
-    }
   }
 
   public void put_decl(String k, String v, Vector<String> depth) {

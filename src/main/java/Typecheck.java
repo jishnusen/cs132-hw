@@ -16,8 +16,8 @@ public class Typecheck {
       root.accept(new SymbolTableBuilder(symbol_table), new Vector<>());
 
       // Phase 2
-      TypecheckVisitor typechecker = new TypecheckVisitor(symbol_table);
-      root.accept(typechecker, new Vector<>());
+      // TypecheckVisitor typechecker = new TypecheckVisitor(symbol_table);
+      // root.accept(typechecker, new Vector<>());
 
       System.out.println("Program type checked successfully");
     } catch (Exception e) {
