@@ -82,6 +82,58 @@ public class GoalSymbolTable {
     return res;
   }
 
+  public String implementor(String class_name, String method_name) {
+    String cur = class_name;
+    do {
+      if (classes_.get(cur).methods_.containsKey(method_name)) {
+        return cur;
+      }
+      cur = link_set_.get(cur);
+    } while (link_set_.containsKey(cur));
+    return cur;
+  }
+
+  public int num_fields(String class_name) {
+    String cur = class_name;
+    int res = classes_.get(cur).declarations_.size();
+    while (link_set_.containsKey(cur)) {
+      cur = link_set_.get(cur);
+      res += classes_.get(cur).declarations_.size();
+    }
+    return res;
+  }
+
+  public int offset(String class_name, String var_name) {
+    String cur = class_name;
+    do {
+      if (classes_.get(cur).declarations_.containsKey(var_name)) {
+        break;
+      }
+      cur = link_set_.get(cur);
+    } while (link_set_.containsKey(cur));
+
+    int offset = classes_.get(cur).declarations_.insertionOrder.indexOf(var_name);
+    while (link_set_.containsKey(cur)) {
+      cur = link_set_.get(cur);
+      offset += classes_.get(cur).declarations_.size();
+    }
+
+    return offset;
+  }
+
+  public String lookup(String k, Vector<String> depth) {
+    HashMap<String, String> avail_vars = fields(depth.get(0));
+    MethodSymbolTable method = methods(depth.get(0)).get(depth.get(1));
+    avail_vars.putAll(method.arguments_);
+    avail_vars.putAll(method.declarations_);
+
+    if (avail_vars.containsKey(k)) {
+      return avail_vars.get(k);
+    } else {
+      throw new TypecheckError();
+    }
+  }
+
   public void put_decl(String k, String v, Vector<String> depth) {
     classes_.get(depth.get(0)).put_decl(k, v, depth);
   }
