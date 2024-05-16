@@ -38,7 +38,7 @@ class ByEnd implements Comparator<Interval> {
 }
 
 public class LivenessTable {
-  Map<String, List<Interval>> liveness = new HashMap<>();
+  Map<String, Interval> liveness = new HashMap<>();
   SortedSet<String> all_registers = all_registers();
 
   static SortedSet<String> all_registers() {
@@ -60,8 +60,7 @@ public class LivenessTable {
   public void assign_LSRA() {
     SortedSet<String> free = all_registers();
 
-    List<Interval> intervals = new ArrayList<>();
-    liveness.values().forEach(intervals::addAll);
+    List<Interval> intervals = new ArrayList<>(liveness.values());
     Collections.sort(intervals, new ByStart());
 
     List<Interval> active = new ArrayList<>();
@@ -100,10 +99,9 @@ public class LivenessTable {
   }
 
   public String lookup(String var, int idx) {
-    for (Interval i : liveness.get(var)) {
-      if (i.contains(idx)) {
-        return i.id;
-      }
+    Interval iv = liveness.get(var);
+    if (iv.contains(idx)) {
+      return iv.id;
     }
     throw new RuntimeException("no register assigned for " +
         var + " @ " + Integer.toString(idx));
@@ -112,23 +110,9 @@ public class LivenessTable {
   public List<String> alive_reg(int idx) {
     List<String> res = new ArrayList<>();
 
-    List<Interval> intervals = new ArrayList<>();
-    liveness.values().forEach(intervals::addAll);
+    List<Interval> intervals = new ArrayList<>(liveness.values());
     for (Interval i : intervals) {
       if (i.contains(idx) && all_registers.contains(i.id)) {
-        res.add(i.id);
-      }
-    }
-    return res;
-  }
-
-  public List<String> clobbered() {
-    List<String> res = new ArrayList<>();
-
-    List<Interval> intervals = new ArrayList<>();
-    liveness.values().forEach(intervals::addAll);
-    for (Interval i : intervals) {
-      if (all_registers.contains(i.id)) {
         res.add(i.id);
       }
     }
@@ -138,9 +122,7 @@ public class LivenessTable {
   public void print() {
     for (String k : liveness.keySet()) {
       System.out.println(k + ":");
-      for (Interval iv : liveness.get(k)) {
-        iv.print();
-      }
+      liveness.get(k).print();
     }
   }
 }

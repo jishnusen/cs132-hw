@@ -39,20 +39,27 @@ public class TranslateVisitor extends DepthFirstVisitor {
     parameter_liveness = new HashMap<>();
 
     List<IR.token.Identifier> params = new ArrayList<>();
-    for (Node p : n.f3.nodes) {
+    for (int i = 0; i < n.f3.nodes.size(); i++) {
+      Node p = n.f3.nodes.get(i);
       String param = ((Identifier)p).f0.toString();
-      params.add(new IR.token.Identifier(param));
-      if (lv.liveness.containsKey(param)) {
-        parameter_liveness.put(param, lv.liveness.get(param).get(0));
+      if (i > 2) {
+        params.add(new IR.token.Identifier("arg__" + param));
+        if (lv.liveness.containsKey(param)) {
+          parameter_liveness.put(param, lv.liveness.get(param));
+        }
+      } else {
+        ins.add(new sparrowv.Move_Reg_Reg(
+              new Register(lv.liveness.get(param).id),
+              new Register("t" + Integer.toString(i))));
       }
     }
 
     n.f5.accept(this);
 
-    String ret = lv.liveness.get(n.f5.f2.f0.toString()).get(0).id;
+    String ret = lv.liveness.get(n.f5.f2.f0.toString()).id;
     IR.token.Identifier ret_id;
     if (lv.all_registers.contains(ret)) {
-      ret_id = new IR.token.Identifier("ret_save_" + ret);
+      ret_id = new IR.token.Identifier("ret_save__" + ret);
       ins.add(new sparrowv.Move_Id_Reg(ret_id, new Register(ret)));
     } else {
       ret_id = new IR.token.Identifier(ret);
@@ -82,9 +89,10 @@ public class TranslateVisitor extends DepthFirstVisitor {
         Interval iv = parameter_liveness.get(p);
         if (iv.start == idx) {
           if (lv.all_registers.contains(iv.id)) {
-            ins.add(new sparrowv.Move_Reg_Id(new Register(iv.id), new IR.token.Identifier(p)));
+            ins.add(new sparrowv.Move_Reg_Id(new Register(iv.id),
+                  new IR.token.Identifier("arg__" + p)));
           } else {
-            iv.id = p;
+            iv.id = "arg__" + p;
           }
         }
       }
@@ -354,17 +362,25 @@ public class TranslateVisitor extends DepthFirstVisitor {
 
     ins.addAll(mapping.head);
     List<IR.token.Identifier> args = new ArrayList<>();;
-    for (Node a : n.f5.nodes) {
+    for (int i = 0; i < n.f5.nodes.size(); i++) {
+      Node a = n.f5.nodes.get(i);
       String s_id = ((Identifier)a).f0.toString();
       String id = lv.lookup(s_id, idx);
-      IR.token.Identifier arg;
-      if (lv.all_registers.contains(id)) {
-        arg = new IR.token.Identifier("param_save_" + id);
-        ins.add(new sparrowv.Move_Id_Reg(arg, new Register(id)));
+
+      if (i > 2) {
+        IR.token.Identifier arg;
+        if (lv.all_registers.contains(id)) {
+          arg = new IR.token.Identifier("param_save__" + id);
+          ins.add(new sparrowv.Move_Id_Reg(arg, new Register(id)));
+        } else {
+          arg = new IR.token.Identifier(id);
+        }
+        args.add(arg);
       } else {
-        arg = new IR.token.Identifier(id);
+        ins.add(new sparrowv.Move_Reg_Reg(
+              new Register("t" + Integer.toString(i)),
+              new Register(id)));
       }
-      args.add(arg);
     }
     // caller save
     List<String> cur_alive = lv.alive_reg(idx + 1);
@@ -373,7 +389,7 @@ public class TranslateVisitor extends DepthFirstVisitor {
 
     Map<String, IR.token.Identifier> saved = new HashMap<>();
     for (String r : cur_alive) {
-      saved.put(r, new IR.token.Identifier("stack_save_" + r));
+      saved.put(r, new IR.token.Identifier("stack_save__" + r));
       ins.add(new sparrowv.Move_Id_Reg(saved.get(r), new Register(r)));
     }
     ins.add(new sparrowv.Call(mapping.reg[0], mapping.reg[1], args));

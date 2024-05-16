@@ -20,33 +20,31 @@ public class LivenessVisitor extends DepthFirstVisitor {
 
     Map<String, Integer> labels = new HashMap<>();
     for (int i = 0; i < instructions.size(); i++) {
-      Instruction ins = (Instruction)(instructions.get(i));
+      Node ins = instructions.get(i);
       List<String> ids_used = ins.accept(new IdsUsed());
       String ids_set = ins.accept(new IdsSet());
-
-      Node ins_c = ins.f0.choice;
-      for (String id : ids_used) {
-        if (lv.liveness.containsKey(id)) {
-          List<Interval> intervals = lv.liveness.get(id);
-          intervals.get(intervals.size() - 1).end = i;
-        } else {
-          lv.liveness.put(id, new ArrayList<>(Arrays.asList(new Interval(i, i))));
-        }
+      if (ids_set != null) {
+        ids_used.add(ids_set);
       }
 
-      if (ids_set != null && !ids_used.contains(ids_set)) {
-        lv.liveness.putIfAbsent(ids_set,
-            new ArrayList<>(Arrays.asList(new Interval(i, i))));
-        List<Interval> intervals = lv.liveness.get(ids_set);
-        Interval last = intervals.get(intervals.size() - 1);
-        last.end = i;
+      for (String id : ids_used) {
+        if (lv.liveness.containsKey(id)) {
+          lv.liveness.get(id).end = i;
+        } else {
+          lv.liveness.put(id, new Interval(i, i));
+        }
       }
     }
 
+    for (int i = 0; i < n.f3.nodes.size() && i < 3; i++) {
+      Node p = n.f3.nodes.get(i);
+      String param = ((Identifier)p).f0.toString();
+      lv.liveness.putIfAbsent(param, new Interval(0, 0));
+      lv.liveness.get(param).start = 0;
+    }
+
     String return_id = n.f5.f2.f0.toString();
-    List<Interval> return_liveness = lv.liveness.get(return_id);
-    return_liveness.get(0).end = return_liveness.get(return_liveness.size() - 1).end;
-    return_liveness.subList(1, return_liveness.size()).clear();
+    lv.liveness.get(return_id).end = instructions.size();
 
     method_liveness.put(n.f1.f0.toString(), lv);
   }
