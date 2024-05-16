@@ -22,10 +22,6 @@ public class LivenessVisitor extends DepthFirstVisitor {
     for (int i = 0; i < instructions.size(); i++) {
       Node ins = instructions.get(i);
       List<String> ids_used = ins.accept(new IdsUsed());
-      String ids_set = ins.accept(new IdsSet());
-      if (ids_set != null) {
-        ids_used.add(ids_set);
-      }
 
       for (String id : ids_used) {
         if (lv.liveness.containsKey(id)) {

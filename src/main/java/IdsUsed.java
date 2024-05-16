@@ -94,7 +94,7 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f2 -> IntegerLiteral()
    */
   public List<String> visit(SetInteger n) {
-    return new ArrayList<String>();
+    return new ArrayList<>(Arrays.asList(n.f0.f0.toString()));
   }
 
   /**
@@ -104,7 +104,7 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f3 -> FunctionName()
    */
   public List<String> visit(SetFuncName n) {
-    return new ArrayList<String>();
+    return new ArrayList<>(Arrays.asList(n.f0.f0.toString()));
   }
 
   /**
@@ -115,7 +115,10 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f4 -> Identifier()
    */
   public List<String> visit(Add n) {
-    return new ArrayList<>(Arrays.asList(n.f2.f0.toString(), n.f4.f0.toString()));
+    return new ArrayList<>(Arrays.asList(
+          n.f0.f0.toString(),
+          n.f2.f0.toString(),
+          n.f4.f0.toString()));
   }
 
   /**
@@ -126,7 +129,10 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f4 -> Identifier()
    */
   public List<String> visit(Subtract n) {
-    return new ArrayList<>(Arrays.asList(n.f2.f0.toString(), n.f4.f0.toString()));
+    return new ArrayList<>(Arrays.asList(
+          n.f0.f0.toString(),
+          n.f2.f0.toString(),
+          n.f4.f0.toString()));
   }
 
   /**
@@ -137,7 +143,10 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f4 -> Identifier()
    */
   public List<String> visit(Multiply n) {
-    return new ArrayList<>(Arrays.asList(n.f2.f0.toString(), n.f4.f0.toString()));
+    return new ArrayList<>(Arrays.asList(
+          n.f0.f0.toString(),
+          n.f2.f0.toString(),
+          n.f4.f0.toString()));
   }
 
   /**
@@ -148,7 +157,10 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f4 -> Identifier()
    */
   public List<String> visit(LessThan n) {
-    return new ArrayList<>(Arrays.asList(n.f2.f0.toString(), n.f4.f0.toString()));
+    return new ArrayList<>(Arrays.asList(
+          n.f0.f0.toString(),
+          n.f2.f0.toString(),
+          n.f4.f0.toString()));
   }
 
   /**
@@ -161,7 +173,9 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f6 -> "]"
    */
   public List<String> visit(Load n) {
-    return new ArrayList<>(Arrays.asList(n.f3.f0.toString()));
+    return new ArrayList<>(Arrays.asList(
+          n.f0.f0.toString(),
+          n.f3.f0.toString()));
   }
 
   /**
@@ -183,7 +197,9 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f2 -> Identifier()
    */
   public List<String> visit(Move n) {
-    return new ArrayList<>(Arrays.asList(n.f2.f0.toString()));
+    return new ArrayList<>(Arrays.asList(
+          n.f0.f0.toString(),
+          n.f2.f0.toString()));
   }
 
   /**
@@ -195,7 +211,9 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f5 -> ")"
    */
   public List<String> visit(Alloc n) {
-    return new ArrayList<>(Arrays.asList(n.f4.f0.toString()));
+    return new ArrayList<>(Arrays.asList(
+          n.f0.f0.toString(),
+          n.f4.f0.toString()));
   }
 
   /**
@@ -250,8 +268,9 @@ public class IdsUsed implements GJNoArguVisitor<List<String>> {
    * f6 -> ")"
    */
   public List<String> visit(Call n) {
-    List<String> res = new ArrayList<>();
-    res.add(n.f3.f0.toString());
+    List<String> res = new ArrayList<>(Arrays.asList(
+          n.f0.f0.toString(),
+          n.f3.f0.toString()));
     for (Node arg : n.f5.nodes) {
       Identifier id = (Identifier)arg;
       res.add(id.f0.toString());
