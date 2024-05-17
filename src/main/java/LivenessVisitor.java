@@ -20,7 +20,29 @@ public class LivenessVisitor extends DepthFirstVisitor {
 
     Map<String, Integer> labels = new HashMap<>();
     for (int i = 0; i < instructions.size(); i++) {
-      Node ins = instructions.get(i);
+      Instruction ins = (Instruction)(instructions.get(i));
+
+      if (ins.f0.choice instanceof LabelWithColon) {
+        LabelWithColon lwc = (LabelWithColon)(ins.f0.choice);
+        labels.put(lwc.f0.f0.toString(), i);
+      }
+
+      String label = null;
+      if (ins.f0.choice instanceof Goto) {
+        Goto gt = (Goto)(ins.f0.choice);
+        label = gt.f1.f0.toString();
+      } else if (ins.f0.choice instanceof IfGoto) {
+        IfGoto gt = (IfGoto)(ins.f0.choice);
+        label = gt.f3.f0.toString();
+      }
+
+      // jump backward
+      if (label != null && labels.containsKey(label)) {
+        for (String id : lv.alive(labels.get(label) + 1)) {
+          lv.liveness.get(id).end = i;
+        }
+      }
+
       List<String> ids_used = ins.accept(new IdsUsed());
 
       for (String id : ids_used) {

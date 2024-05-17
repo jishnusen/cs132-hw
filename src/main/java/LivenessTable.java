@@ -107,13 +107,24 @@ public class LivenessTable {
         var + " @ " + Integer.toString(idx));
   }
 
+  public List<String> alive(int idx) {
+    List<String> res = new ArrayList<>();
+
+    for (String id : liveness.keySet()) {
+      if (liveness.get(id).contains(idx)) {
+        res.add(id);
+      }
+    }
+    return res;
+  }
+
   public List<String> alive_reg(int idx) {
     List<String> res = new ArrayList<>();
 
-    List<Interval> intervals = new ArrayList<>(liveness.values());
-    for (Interval i : intervals) {
-      if (i.contains(idx) && all_registers.contains(i.id)) {
-        res.add(i.id);
+    for (String v : alive(idx)) {
+      String id = liveness.get(v).id;
+      if (all_registers.contains(id)) {
+        res.add(id);
       }
     }
     return res;
