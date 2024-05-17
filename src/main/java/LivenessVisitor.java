@@ -18,6 +18,12 @@ public class LivenessVisitor extends DepthFirstVisitor {
     LivenessTable lv = new LivenessTable();
     List<Node> instructions = n.f5.f0.nodes;
 
+    for (int i = 0; i < n.f3.nodes.size() && i < 3; i++) {
+      Node p = n.f3.nodes.get(i);
+      String param = ((Identifier)p).f0.toString();
+      lv.liveness.put(param, new Interval(0, 0));
+    }
+
     Map<String, Integer> labels = new HashMap<>();
     for (int i = 0; i < instructions.size(); i++) {
       Instruction ins = (Instruction)(instructions.get(i));
@@ -52,13 +58,6 @@ public class LivenessVisitor extends DepthFirstVisitor {
           lv.liveness.put(id, new Interval(i, i));
         }
       }
-    }
-
-    for (int i = 0; i < n.f3.nodes.size() && i < 3; i++) {
-      Node p = n.f3.nodes.get(i);
-      String param = ((Identifier)p).f0.toString();
-      lv.liveness.putIfAbsent(param, new Interval(0, 0));
-      lv.liveness.get(param).start = 0;
     }
 
     String return_id = n.f5.f2.f0.toString();
