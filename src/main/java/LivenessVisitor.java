@@ -17,11 +17,17 @@ public class LivenessVisitor extends DepthFirstVisitor {
   public void visit(FunctionDeclaration n) {
     LivenessTable lv = new LivenessTable();
     List<Node> instructions = n.f5.f0.nodes;
+    String method = n.f1.f0.toString();
 
-    for (int i = 0; i < n.f3.nodes.size() && i < 3; i++) {
+    Map<String, Interval> rg_params = new HashMap<>();
+    for (int i = 0; i < n.f3.nodes.size() && i < 6; i++) {
       Node p = n.f3.nodes.get(i);
       String param = ((Identifier)p).f0.toString();
-      lv.liveness.put(param, new Interval(0, 0));
+      rg_params.put(param, new Interval(0, 0));
+      rg_params.get(param).id = "a" + Integer.toString(i + 2);
+    }
+    for (int i = rg_params.size(); i < 6; i++) {
+      lv.all_registers.add("a" + Integer.toString(i + 2));
     }
 
     Map<String, Integer> labels = new HashMap<>();
@@ -44,15 +50,24 @@ public class LivenessVisitor extends DepthFirstVisitor {
 
       // jump backward
       if (label != null && labels.containsKey(label)) {
-        for (String id : lv.alive(labels.get(label) + 1)) {
-          lv.liveness.get(id).end = i;
+        Interval loop = new Interval(labels.get(label), i);
+        List<Interval> ivs = new ArrayList<>();
+        ivs.addAll(lv.liveness.values());
+        ivs.addAll(rg_params.values());
+        for (Interval iv : ivs) {
+          if (iv.contains(loop.start)) {
+            // iv.start = Math.min(iv.start, loop.start);
+            iv.end = i;
+          }
         }
       }
 
       List<String> ids_used = ins.accept(new IdsUsed());
 
       for (String id : ids_used) {
-        if (lv.liveness.containsKey(id)) {
+        if (rg_params.containsKey(id)) {
+          rg_params.get(id).end = i;
+        } else if (lv.liveness.containsKey(id)) {
           lv.liveness.get(id).end = i;
         } else {
           lv.liveness.put(id, new Interval(i, i));
@@ -61,8 +76,16 @@ public class LivenessVisitor extends DepthFirstVisitor {
     }
 
     String return_id = n.f5.f2.f0.toString();
+    if (lv.liveness.containsKey(return_id))
+      lv.liveness.get(return_id).end = instructions.size();
+
+    lv.assign_LSRA();
+    for (int i = 2; i < 8; i++) {
+      lv.all_registers.add("a" + Integer.toString(i));
+    }
+    lv.liveness.putAll(rg_params);
     lv.liveness.get(return_id).end = instructions.size();
 
-    method_liveness.put(n.f1.f0.toString(), lv);
+    method_liveness.put(method, lv);
   }
 }

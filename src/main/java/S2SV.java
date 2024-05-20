@@ -12,11 +12,6 @@ public class S2SV {
     LivenessVisitor lv_visitor = new LivenessVisitor();
     root.accept(lv_visitor);
 
-    for (String fn : lv_visitor.method_liveness.keySet()) {
-      LivenessTable lv = lv_visitor.method_liveness.get(fn);
-      lv.assign_LSRA();
-    }
-
     TranslateVisitor tv = new TranslateVisitor(lv_visitor.method_liveness);
     root.accept(tv);
 

@@ -14,6 +14,10 @@ class Interval {
     return start <= i && i <= end;
   }
 
+  public boolean overlaps(Interval other) {
+    return start <= other.end && other.start <= end;
+  }
+
   public void print() {
     System.out.println(
         "(" + Integer.toString(start) +
@@ -44,13 +48,10 @@ public class LivenessTable {
   static SortedSet<String> all_registers() {
     SortedSet<String> res = new TreeSet<>();
 
-    for (int i = 2; i < 8; i++) {
-      res.add("a" + Integer.toString(i));
-    }
     for (int i = 1; i < 12; i++) {
       res.add("s" + Integer.toString(i));
     }
-    for (int i = 3; i < 5; i++) {
+    for (int i = 2; i < 5; i++) {
       res.add("t" + Integer.toString(i));
     }
 

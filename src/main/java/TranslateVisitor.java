@@ -42,15 +42,15 @@ public class TranslateVisitor extends DepthFirstVisitor {
     for (int i = 0; i < n.f3.nodes.size(); i++) {
       Node p = n.f3.nodes.get(i);
       String param = ((Identifier)p).f0.toString();
-      if (i > 2) {
+      if (i > 5) {
         params.add(new IR.token.Identifier("arg__" + param));
         if (lv.liveness.containsKey(param)) {
           parameter_liveness.put(param, lv.liveness.get(param));
         }
       } else {
-        ins.add(new sparrowv.Move_Reg_Reg(
-              new Register(lv.liveness.get(param).id),
-              new Register("t" + Integer.toString(i))));
+        // ins.add(new sparrowv.Move_Reg_Reg(
+        //       new Register(lv.liveness.get(param).id),
+        //       new Register("a" + Integer.toString(i + 2))));
       }
     }
 
@@ -123,6 +123,16 @@ public class TranslateVisitor extends DepthFirstVisitor {
       throw new RuntimeException("got too many ids");
     }
 
+    if (load_first && ids.length == 3) {
+      throw new RuntimeException("load conflict");
+    }
+
+    String[] reg_ids;
+    if (ids.length == 3) {
+      reg_ids = new String[]{ "t0", "t0", "t1" };
+    } else {
+      reg_ids = new String[]{ "t0", "t1" };
+    }
     Registers res = new Registers();
     res.reg = new Register[ids.length];
     for (int i = 0; i < ids.length; i++) {
@@ -130,11 +140,11 @@ public class TranslateVisitor extends DepthFirstVisitor {
       if (lv.all_registers.contains(id)) {
         res.reg[i] = new Register(id);
       } else {
-        res.reg[i] = new Register("t" + Integer.toString(i));
+        res.reg[i] = new Register(reg_ids[i]);
         IR.token.Identifier stack = new IR.token.Identifier(id);
         if (i == 0) {
-          // may need to write back result
           if (load_first) res.head.add(new sparrowv.Move_Reg_Id(res.reg[i], stack));
+          // may need to write back result
           res.tail.add(new sparrowv.Move_Id_Reg(stack, res.reg[i]));
         } else {
           res.head.add(new sparrowv.Move_Reg_Id(res.reg[i], stack));
@@ -244,11 +254,12 @@ public class TranslateVisitor extends DepthFirstVisitor {
    */
   public void visit(Load n) {
     Identifier[] ids = {n.f0, n.f3};
-    Registers mapping = get_registers(ids, true);
+    Registers mapping = get_registers(ids);
     int offset = Integer.parseInt(n.f5.f0.toString());
 
     ins.addAll(mapping.head);
     ins.add(new sparrowv.Load(mapping.reg[0], mapping.reg[1], offset));
+    ins.addAll(mapping.tail);
   }
 
   /**
@@ -361,39 +372,83 @@ public class TranslateVisitor extends DepthFirstVisitor {
     Registers mapping = get_registers(ids);
 
     ins.addAll(mapping.head);
-    List<IR.token.Identifier> args = new ArrayList<>();;
-    for (int i = 0; i < n.f5.nodes.size(); i++) {
-      Node a = n.f5.nodes.get(i);
-      String s_id = ((Identifier)a).f0.toString();
-      String id = lv.lookup(s_id, idx);
 
-      if (i > 2) {
-        IR.token.Identifier arg;
-        if (lv.all_registers.contains(id)) {
-          arg = new IR.token.Identifier("param_save__" + id);
-          ins.add(new sparrowv.Move_Id_Reg(arg, new Register(id)));
-        } else {
-          arg = new IR.token.Identifier(id);
-        }
-        args.add(arg);
-      } else {
-        ins.add(new sparrowv.Move_Reg_Reg(
-              new Register("t" + Integer.toString(i)),
-              new Register(id)));
+    // caller save
+    List<String> cur_alive = lv.alive(idx);
+    List<String> lookahead = lv.alive(idx + 1);
+    List<String> preserve_reg = new ArrayList<>();
+    for (String name : lookahead) {
+      String reg = lv.liveness.get(name).id;
+      if (!lv.all_registers.contains(reg)) {
+        continue;
+      }
+      if (cur_alive.contains(name)) {
+        preserve_reg.add(reg);
       }
     }
-    // caller save
-    List<String> cur_alive = lv.alive_reg(idx + 1);
+
     // don't save register we are using to store return
-    cur_alive.remove(mapping.reg[0].toString());
+    preserve_reg.remove(mapping.reg[0].toString());
 
     Map<String, IR.token.Identifier> saved = new HashMap<>();
-    for (String r : cur_alive) {
+    for (String r : preserve_reg) {
       saved.put(r, new IR.token.Identifier("stack_save__" + r));
       ins.add(new sparrowv.Move_Id_Reg(saved.get(r), new Register(r)));
     }
+
+    List<IR.token.Identifier> args = new ArrayList<>();
+    List<String> arg_ids = new ArrayList<>();
+    for (int i = 0; i < n.f5.nodes.size(); i++) {
+      Node a = n.f5.nodes.get(i);
+      String s_id = ((Identifier)a).f0.toString();
+      arg_ids.add(lv.lookup(s_id, idx));
+    }
+    for (int i = 0; i < arg_ids.size(); i++) {
+      String r = arg_ids.get(i);
+      int r_num = (r.charAt(1) - '0') - 2;
+      if (IdGenerator.is_param(r) && !saved.containsKey(r) && i != r_num) {
+        saved.put(r, new IR.token.Identifier("stack_save__" + r));
+        ins.add(new sparrowv.Move_Id_Reg(saved.get(r), new Register(r)));
+      }
+    }
+
+    Set<String> p_saved = new HashSet<>();
+    for (int i = 6; i < arg_ids.size(); i++) {
+      String id = arg_ids.get(i);
+      IR.token.Identifier arg;
+      if (lv.all_registers.contains(id)) {
+        if (saved.containsKey(id)) {
+          arg = saved.get(id);
+        } else {
+          arg = new IR.token.Identifier("param_save__" + id);
+          if (!p_saved.contains(id))
+            ins.add(new sparrowv.Move_Id_Reg(arg, new Register(id)));
+          p_saved.add(id);
+        }
+      } else {
+        arg = new IR.token.Identifier(id);
+      }
+      args.add(arg);
+    }
+
+    for (int i = 0; i < arg_ids.size() && i < 6; i++) {
+      String id = arg_ids.get(i);
+      if (IdGenerator.is_param(id)) {
+        int r_num = (id.charAt(1) - '0') - 2;
+        if (r_num != i) {
+          ins.add(new sparrowv.Move_Reg_Id(
+                new Register("a" + Integer.toString(i + 2)),
+                saved.get(id)));
+        }
+      } else {
+        ins.add(new sparrowv.Move_Reg_Reg(
+              new Register("a" + Integer.toString(i + 2)),
+              new Register(id)));
+      }
+    }
+
     ins.add(new sparrowv.Call(mapping.reg[0], mapping.reg[1], args));
-    for (String r : cur_alive) {
+    for (String r : preserve_reg) {
       ins.add(new sparrowv.Move_Reg_Id(new Register(r), saved.get(r)));
     }
 
