@@ -18,6 +18,7 @@ public class LivenessVisitor extends DepthFirstVisitor {
     LivenessTable lv = new LivenessTable();
     List<Node> instructions = n.f5.f0.nodes;
     String method = n.f1.f0.toString();
+    List<Integer> calls = new ArrayList<>();
 
     Map<String, Interval> rg_params = new HashMap<>();
     for (int i = 0; i < n.f3.nodes.size() && i < 6; i++) {
@@ -33,6 +34,10 @@ public class LivenessVisitor extends DepthFirstVisitor {
     Map<String, Integer> labels = new HashMap<>();
     for (int i = 0; i < instructions.size(); i++) {
       Instruction ins = (Instruction)(instructions.get(i));
+
+      if (ins.f0.choice instanceof Call) {
+        calls.add(i);
+      }
 
       if (ins.f0.choice instanceof LabelWithColon) {
         LabelWithColon lwc = (LabelWithColon)(ins.f0.choice);
@@ -80,6 +85,15 @@ public class LivenessVisitor extends DepthFirstVisitor {
       lv.liveness.get(return_id).end = instructions.size();
 
     lv.assign_LSRA();
+    if (!calls.isEmpty()) {
+      float avg_alive_call = 0;
+      for (int i : calls) {
+        avg_alive_call += lv.alive_reg(i).size();
+      }
+      avg_alive_call /= calls.size();
+      lv.avg_alive_call = avg_alive_call;
+    }
+
     for (int i = 2; i < 8; i++) {
       lv.all_registers.add("a" + Integer.toString(i));
     }

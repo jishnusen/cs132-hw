@@ -14,11 +14,19 @@ public class TranslateVisitor extends DepthFirstVisitor {
   Map<String, Interval> parameter_liveness;
 
   sparrowv.Program p = new sparrowv.Program();
+  boolean callee_save = true;
 
   TranslateVisitor(Map<String, LivenessTable> method_liveness) {
     super();
     this.p.funDecls = new ArrayList<>();
     this.method_liveness = method_liveness;
+    float total_avg_alive_call = 0;
+    float total_clobbered = 0;
+    for (LivenessTable lv : method_liveness.values()) {
+      total_avg_alive_call += lv.avg_alive_call;
+      total_clobbered += lv.clobbered().size();
+    }
+    this.callee_save = total_avg_alive_call > total_clobbered;
   }
 
    /**
@@ -54,6 +62,13 @@ public class TranslateVisitor extends DepthFirstVisitor {
       }
     }
 
+    if (callee_save && !method.equals("Main")) {
+      for (String id : lv.clobbered()) {
+        IR.token.Identifier stack_id = new IR.token.Identifier("callee_save__" + id);
+        ins.add(new sparrowv.Move_Id_Reg(stack_id, new Register(id)));
+      }
+    }
+
     n.f5.accept(this);
 
     String ret = lv.liveness.get(n.f5.f2.f0.toString()).id;
@@ -63,6 +78,13 @@ public class TranslateVisitor extends DepthFirstVisitor {
       ins.add(new sparrowv.Move_Id_Reg(ret_id, new Register(ret)));
     } else {
       ret_id = new IR.token.Identifier(ret);
+    }
+
+    if (callee_save && !method.equals("Main")) {
+      for (String id : lv.clobbered()) {
+        IR.token.Identifier stack_id = new IR.token.Identifier("callee_save__" + id);
+        ins.add(new sparrowv.Move_Reg_Id(new Register(id), stack_id));
+      }
     }
 
     p.funDecls.add(
@@ -389,6 +411,14 @@ public class TranslateVisitor extends DepthFirstVisitor {
 
     // don't save register we are using to store return
     preserve_reg.remove(mapping.reg[0].toString());
+
+    if (callee_save) {
+      List<String> non_arg = new ArrayList<>();
+      for (String reg : preserve_reg) {
+        if (!IdGenerator.is_param(reg)) non_arg.add(reg);
+      }
+      preserve_reg.removeAll(non_arg);
+    }
 
     Map<String, IR.token.Identifier> saved = new HashMap<>();
     for (String r : preserve_reg) {
