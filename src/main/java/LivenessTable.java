@@ -44,6 +44,7 @@ class ByEnd implements Comparator<Interval> {
 public class LivenessTable {
   Map<String, Interval> liveness = new HashMap<>();
   SortedSet<String> all_registers = all_registers();
+  int total_calls = 0;
   float avg_alive_call = 0;
 
   static SortedSet<String> all_registers() {
@@ -135,7 +136,9 @@ public class LivenessTable {
   public Set<String> clobbered() {
     Set<String> res = new HashSet<>();
     for (Interval iv : liveness.values()) {
-      if (all_registers.contains(iv.id)) res.add(iv.id);
+      if (all_registers.contains(iv.id) && !IdGenerator.is_param(iv.id)) {
+        res.add(iv.id);
+      }
     }
     return res;
   }

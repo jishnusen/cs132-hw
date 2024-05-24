@@ -12,21 +12,43 @@ public class TranslateVisitor extends DepthFirstVisitor {
   int idx = 0;
   List<sparrowv.Instruction> ins = null;
   Map<String, Interval> parameter_liveness;
+  String main_method = null;
 
   sparrowv.Program p = new sparrowv.Program();
-  boolean callee_save = true;
+  boolean callee_save = false;
 
   TranslateVisitor(Map<String, LivenessTable> method_liveness) {
     super();
     this.p.funDecls = new ArrayList<>();
     this.method_liveness = method_liveness;
-    float total_avg_alive_call = 0;
-    float total_clobbered = 0;
-    for (LivenessTable lv : method_liveness.values()) {
-      total_avg_alive_call += lv.avg_alive_call;
-      total_clobbered += lv.clobbered().size();
+  }
+
+  /**
+   * f0 -> ( FunctionDeclaration() )*
+   * f1 -> <EOF>
+   */
+  public void visit(Program n) {
+    main_method = ((FunctionDeclaration)n.f0.nodes.get(0)).f1.f0.toString();
+
+    LivenessTable main_lv = method_liveness.get(main_method);
+    int main_calls = main_lv.total_calls;
+
+    int nonmain_calls = 0;
+    float avg_clobbered = 0;
+    for (String method_name : method_liveness.keySet()) {
+      LivenessTable lv = method_liveness.get(method_name);
+      if (!method_name.equals(main_method)) {
+        avg_clobbered += lv.clobbered().size();
+        nonmain_calls += lv.total_calls;
+      }
     }
-    this.callee_save = total_avg_alive_call > total_clobbered;
+    if (method_liveness.size() > 1)
+      avg_clobbered /= (method_liveness.size() - 1);
+    System.out.println(main_lv.avg_alive_call);
+    System.out.println(main_calls*avg_clobbered);
+    callee_save = nonmain_calls == 0 && (main_calls*avg_clobbered) <= main_lv.avg_alive_call;
+
+    super.visit(n);
   }
 
    /**
@@ -62,7 +84,7 @@ public class TranslateVisitor extends DepthFirstVisitor {
       }
     }
 
-    if (callee_save && !method.equals("Main")) {
+    if (callee_save && !method.equals(main_method)) {
       for (String id : lv.clobbered()) {
         IR.token.Identifier stack_id = new IR.token.Identifier("callee_save__" + id);
         ins.add(new sparrowv.Move_Id_Reg(stack_id, new Register(id)));
@@ -80,7 +102,7 @@ public class TranslateVisitor extends DepthFirstVisitor {
       ret_id = new IR.token.Identifier(ret);
     }
 
-    if (callee_save && !method.equals("Main")) {
+    if (callee_save && !method.contains(main_method)) {
       for (String id : lv.clobbered()) {
         IR.token.Identifier stack_id = new IR.token.Identifier("callee_save__" + id);
         ins.add(new sparrowv.Move_Reg_Id(new Register(id), stack_id));
