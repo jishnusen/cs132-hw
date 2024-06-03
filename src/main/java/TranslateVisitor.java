@@ -44,9 +44,9 @@ public class TranslateVisitor extends DepthFirstVisitor {
     }
     if (method_liveness.size() > 1)
       avg_clobbered /= (method_liveness.size() - 1);
-    System.out.println(main_lv.avg_alive_call);
-    System.out.println(main_calls*avg_clobbered);
-    callee_save = nonmain_calls == 0 && (main_calls*avg_clobbered) <= main_lv.avg_alive_call;
+    // System.out.println(main_calls*avg_clobbered);
+    // System.out.println(main_lv.avg_alive_call);
+    callee_save = nonmain_calls == 0 && main_calls > 1;
 
     super.visit(n);
   }

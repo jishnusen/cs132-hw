@@ -93,13 +93,14 @@ public class LivenessVisitor extends DepthFirstVisitor {
         List<String> lookahead = lv.alive(i + 1);
         for (String name : lookahead) {
           String reg = lv.liveness.get(name).id;
-          if (!lv.all_registers.contains(reg)) {
+          if (!lv.all_registers.contains(reg) || IdGenerator.is_param(reg)) {
             continue;
           }
           if (cur_alive.contains(name)) {
             avg_alive_call += 1;
           }
         }
+        avg_alive_call -= 1; // account for return value
       }
       avg_alive_call /= calls.size();
       lv.avg_alive_call = avg_alive_call;
