@@ -1,3 +1,6 @@
+package tc;
+
+import lib.*;
 import java.util.*;
 
 import minijava.visitor.GJVoidDepthFirst;

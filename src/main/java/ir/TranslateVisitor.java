@@ -1,3 +1,7 @@
+package ir;
+
+import lib.*;
+
 import java.util.*;
 
 import minijava.visitor.GJVoidDepthFirst;
@@ -8,7 +12,7 @@ import IR.token.FunctionName;
 
 public class TranslateVisitor extends GJVoidDepthFirst<Vector<String>> {
   GoalSymbolTable symbol_table_;
-  Program program_ = new Program();
+  public Program program_ = new Program();
 
   public TranslateVisitor(GoalSymbolTable symbol_table) {
     super();

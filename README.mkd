@@ -10,6 +10,11 @@ To execute
 gradle -q run < file.java | java -jar misc/venus.jar
 ```
 
+To run the test suite, do
+```
+gradle test
+```
+
 Parsing libraries, many testcases, and misc jars provided by Palsberg et. al in CS
 132 compiler construction UCLA course.
 

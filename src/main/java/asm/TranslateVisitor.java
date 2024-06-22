@@ -1,3 +1,5 @@
+package asm;
+
 import java.util.*;
 
 import IR.token.Identifier;
@@ -14,7 +16,7 @@ public class TranslateVisitor extends sparrowv.visitor.DepthFirst {
 
   int unique = 0;
 
-  TranslateVisitor(Map<String, FunctionInfo> functions) {
+  public TranslateVisitor(Map<String, FunctionInfo> functions) {
     this.functions = functions;
   }
 

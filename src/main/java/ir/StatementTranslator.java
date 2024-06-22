@@ -1,3 +1,5 @@
+package ir;
+
 import java.util.*;
 
 import minijava.visitor.DepthFirstVisitor;
@@ -7,13 +9,13 @@ import sparrow.*;
 import IR.token.Label;
 
 public class StatementTranslator extends DepthFirstVisitor {
-  GoalSymbolTable symbol_table_;
+  lib.GoalSymbolTable symbol_table_;
   Vector<String> depth_;
   Map<String, IR.token.Identifier> identifiers_;
   List<Instruction> instructions_;
   ExpressionTranslator translator_;
 
-  public StatementTranslator(GoalSymbolTable symbol_table,
+  public StatementTranslator(lib.GoalSymbolTable symbol_table,
                              Vector<String> depth,
                              Map<String, IR.token.Identifier> identifiers,
                              List<Instruction> instructions) {
@@ -44,7 +46,7 @@ public class StatementTranslator extends DepthFirstVisitor {
 
   @Override
   public void visit(AssignmentStatement n) {
-    String lhs_name = n.f0.accept(new ToStringVisitor());
+    String lhs_name = n.f0.accept(new lib.ToStringVisitor());
     IR.token.Identifier rhs_reg = n.f2.accept(translator_);
 
     if (identifiers_.containsKey(lhs_name)) { // param or decl
@@ -60,7 +62,7 @@ public class StatementTranslator extends DepthFirstVisitor {
 
   @Override
   public void visit(ArrayAssignmentStatement n) {
-    String lhs_name = n.f0.accept(new ToStringVisitor());
+    String lhs_name = n.f0.accept(new lib.ToStringVisitor());
     IR.token.Identifier array_address;
 
     if (identifiers_.containsKey(lhs_name)) { // param or decl

@@ -1,22 +1,5 @@
 apply plugin: 'java'
 
-def mainClass () {
-    switch (homework) {
-        case "hw1":
-            return "Parse"
-        case "hw2":
-            return "Typecheck"
-        case "hw3":
-            return "J2S"
-        case "hw4":
-            return "S2SV"
-        case "hw5":
-            return "SV2V"
-        default:
-            throw new Exception("Didn't reconize homework='" + homework +"', remember to set it in gradle.properties");
-    }
-}
-
 repositories {
     jcenter()
 }
@@ -43,35 +26,27 @@ sourceSets {
             srcDir "src/main/java"
         }
     }
-    test {
-        java {
-            srcDir "src/test/java"
-        }
-    }
+}
+
+task testSuite(type: Exec) {
+    dependsOn jar
+    executable "bash"
+    args "./test.sh"
 }
 
 test {
-  testLogging {
-    showStandardStreams = true
-  }
+    dependsOn tasks.testSuite
 }
 
 task run (type: JavaExec) {
     standardInput = System.in
-    main = mainClass()
+    main = "Compile"
     classpath = sourceSets.main.runtimeClasspath
 }
 
 task sourcesTar(type: Tar, dependsOn: classes) {
     from sourceSets.main.allJava
     duplicatesStrategy = 'include'
-}
-
-task pregrade(type: Exec) {
-    dependsOn sourcesTar, test
-    executable "bash"
-    args "./grade.sh", homework, ".",
-      "testcases/${homework}", "build/distributions/${rootProject.name}.tar"
 }
 
 artifacts {

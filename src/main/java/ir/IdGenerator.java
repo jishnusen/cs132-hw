@@ -1,3 +1,5 @@
+package ir;
+
 import java.util.*;
 
 import IR.token.*;

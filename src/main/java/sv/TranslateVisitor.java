@@ -1,3 +1,5 @@
+package sv;
+
 import java.util.*;
 
 import IR.visitor.DepthFirstVisitor;
@@ -14,12 +16,12 @@ public class TranslateVisitor extends DepthFirstVisitor {
   Map<String, Interval> parameter_liveness;
   String main_method = null;
 
-  sparrowv.Program p = new sparrowv.Program();
+  public sparrowv.Program program_ = new sparrowv.Program();
   boolean callee_save = false;
 
-  TranslateVisitor(Map<String, LivenessTable> method_liveness) {
+  public TranslateVisitor(Map<String, LivenessTable> method_liveness) {
     super();
-    this.p.funDecls = new ArrayList<>();
+    this.program_.funDecls = new ArrayList<>();
     this.method_liveness = method_liveness;
   }
 
@@ -109,7 +111,7 @@ public class TranslateVisitor extends DepthFirstVisitor {
       }
     }
 
-    p.funDecls.add(
+    program_.funDecls.add(
       new sparrowv.FunctionDecl(
         new IR.token.FunctionName(method),
         params,

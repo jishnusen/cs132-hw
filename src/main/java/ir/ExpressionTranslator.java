@@ -1,3 +1,6 @@
+package ir;
+
+import lib.*;
 import java.util.*;
 
 import minijava.visitor.GJNoArguDepthFirst;
