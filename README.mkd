@@ -1,0 +1,16 @@
+# MiniJava RISC-V Compiler
+
+To run:
+```
+gradle -q run < file.java > out.riscv
+```
+
+To execute
+```
+gradle -q run < file.java | java -jar misc/venus.jar
+```
+
+Parsing libraries, many testcases, and misc jars provided by Palsberg et. al in CS
+132 compiler construction UCLA course.
+
+`src/main/java/*` implementation is my own.
